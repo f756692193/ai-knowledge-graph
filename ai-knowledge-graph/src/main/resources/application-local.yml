@@ -1,0 +1,5 @@
+logging:
+  file:
+    path: /home/logs/ai-knowledge-graph
+  level:
+    root: DEBUG

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="60 seconds" debug="false">
+    <springProperty scope="context" name="logLevel" source="logging.level.root" defaultValue="debug" />
+    <springProperty scope="context" name="logPath" source="logging.file.path"/>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36}.%M %L - %msg%n</Pattern>
+        </layout>
+    </appender>
+
+    <appender name="FILEOUT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${logPath}/application.log</file>
+        <append>true</append>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${logPath}/bak.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>60</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36}.%M %L - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <springProfile name="dev">
+        <root level="{logLevel}">
+            <appender-ref ref="STDOUT" />
+            <appender-ref ref="FILEOUT" />
+        </root>
+    </springProfile>
+
+    <springProfile name="local">
+        <root level="{logLevel}">
+            <appender-ref ref="STDOUT" />
+            <appender-ref ref="FILEOUT" />
+        </root>
+    </springProfile>
+
+    <springProfile name="production">
+        <root level="{logLevel}">
+            <appender-ref ref="STDOUT" />
+            <appender-ref ref="FILEOUT" />
+        </root>
+    </springProfile>
+
+    <logger name="io.swagger" level="ERROR" />
+    <logger name="org.hibernate.validator" level="ERROR" />
+    <logger name="org.springframework" level="INFO" />
+    <logger name="org.springframework" level="INFO"/>
+    <logger name="io.lettuce.core.protocol" level="INFO"/>
+    <logger name="com.netflix" level="ERROR" />
+    <logger name="org.apache.http" level="ERROR" />
+    <logger name="springfox.documentation.spring" level="INFO" />
+    <logger name="io.lettuce.core" level="INFO" />
+
+</configuration>

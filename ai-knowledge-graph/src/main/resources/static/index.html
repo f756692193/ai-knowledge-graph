@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100%;">
+<head>
+    <title>AI知识图谱</title>
+    <script src="https://cdn.staticfile.org/echarts/4.3.0/echarts.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://statics.igg.com/assets/lib/imc/imc-style/0.1.6/style.css" />
+    <meta charset="UTF-8">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #search-form {
+            width: 60vw;
+            margin: 0 auto;
+            height: 100px;
+        }
+        #search-input {
+            resize: none;
+            width: 100%;
+            height: 100%;
+            border: none;
+            outline: none;
+            /* border-bottom: 1px solid #ddd; */
+            border: 1px solid #ddd;
+            border-radius: 2px;
+            margin-top: 10px;
+        }
+        #search-input:focus {
+            border: 1px solid #1890ff;
+        }
+        #description {
+            width: 60%;
+            margin: 0 auto;
+            height: calc(100vh - 300px);
+        }
+        button {
+            margin: 0px;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        .count-pos {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+        }
+    </style>
+</head>
+<body>
+<header class="flex justify-end p-16 color-black bg-blue-70">
+    <div class="cursor-pointer hover-color-blue">
+        当前在线人数[<span id="online_count">0</span>]
+    </div>
+    <div class="ml-16 cursor-pointer hover-color-blue">
+        使用帮助
+    </div>
+    <div class="ml-16 cursor-pointer hover-color-blue">
+        登录
+    </div>
+    <div class="ml-16 cursor-pointer hover-color-blue">
+        登出
+    </div>
+</header>
+<main class="flex flex-col items-center">
+    <form id="search-form" class="pos-r">
+        <textarea id="search-input" placeholder="输入描述信息" oninput="countCharacters()"></textarea>
+        <span id="character-count" class="count-pos">0/200</span>
+    </form>
+    <div class="flex" style="margin-top: 10px;">
+        <button id="btn_generate" class=" my-16 hover-bg-blue-70 flex-0" style="width: 120px; margin-right: 10px;" onclick="send()">生成图谱</button>
+        <button id="btn_clear" class=" my-16 hover-bg-blue-70 flex-0" style="width: 80px; margin-right: 10px;" onclick="clearInput()">清空</button>
+        <button id="btn_convert" class=" my-16 hover-bg-blue-70 flex-0" style="width: 150px; margin-right: 10px;" onclick="convert()">Cypher转为图谱</button>
+        <button id="btn_export" class=" my-16 hover-bg-blue-70 flex-0" style="width: 120px; margin-right: 10px;" onclick="exportCypher()">导出Cypher</button>
+    </div>
+</main>
+<div id="description" class="bg-grey">知识图谱显示</div>
+<footer class="text-align-center pos-f bottom-0 w-100p bg-black-80 color-white">
+    <p style="font-family: Arial, sans-serif; font-size: 14px;">
+        版权所有 © 2024 ai-knowledge-graph。保留所有权利。<a href="#" style="cursor: pointer;">您的备案号</a>
+        <a href="https://github.com/f756692193/ai-knowledge-graph" target="_blank"><img src="/img/github-logo.jpg" alt="GitHub Logo" style="max-width: 42px; max-height: 24px; margin-left: 30px;"></a>
+    </p>
+</footer>
+<script>
+    var myChart = echarts.init(document.getElementById('description'));
+    var categories = [];
+    categories[0] = {name: '实体'};
+    option = {
+        // 图的标题
+        title: {
+            text: '知识图谱'
+        },
+        // 提示框的配置
+        tooltip: {
+            formatter: function (x) {
+                return x.data.des;
+            }
+        },
+        // 工具箱
+        toolbox: {
+            // 显示工具箱
+            show: true,
+            feature: {
+                mark: {
+                    show: true
+                },
+                // 还原
+                restore: {
+                    show: true
+                },
+                // 保存为图片
+                saveAsImage: {
+                    show: true
+                }
+            }
+        },
+        legend: [{
+            // selectedMode: 'single',
+            data: categories.map(function (a) {
+                return a.name;
+            })
+        }],
+        series: [{
+            type: 'graph', // 类型:关系图
+            layout: 'force', //图的布局，类型为力导图
+            symbolSize: 40, // 调整节点的大小
+            roam: true, // 是否开启鼠标缩放和平移漫游。默认不开启。如果只想要开启缩放或者平移,可以设置成 'scale' 或者 'move'。设置成 true 为都开启
+            edgeSymbol: ['circle', 'arrow'],
+            edgeSymbolSize: [2, 10],
+            edgeLabel: {
+                normal: {
+                    textStyle: {
+                        fontSize: 20
+                    }
+                }
+            },
+            force: {
+                repulsion: 2500,
+                edgeLength: [10, 50]
+            },
+            draggable: true,
+            lineStyle: {
+                normal: {
+                    width: 2,
+                    color: '#4b565b',
+                }
+            },
+            edgeLabel: {
+                normal: {
+                    show: true,
+                    formatter: function (x) {
+                        return x.data.name;
+                    }
+                }
+            },
+            label: {
+                normal: {
+                    show: true,
+                    textStyle: {}
+                }
+            },
+
+            // 数据
+            data: [],
+            links: [],
+            categories: categories,
+        }]
+    };
+    // init show
+    option.series[0].data = [{"des":"知识图谱","symbolSize":70,"name":"知识图谱","category":0},{"des":"基础知识","symbolSize":70,"name":"基础知识","category":0},{"des":"数学知识","symbolSize":70,"name":"数学知识","category":0},{"des":"NLP","symbolSize":70,"name":"NLP","category":0},{"des":"机器学习","symbolSize":70,"name":"机器学习","category":0},{"des":"图数据库","symbolSize":70,"name":"图数据库","category":0},{"des":"数据结构","symbolSize":70,"name":"数据结构","category":0},{"des":"搜索引擎","symbolSize":70,"name":"搜索引擎","category":0},{"des":"智能客服","symbolSize":70,"name":"智能客服","category":0},{"des":"个性化推荐","symbolSize":70,"name":"个性化推荐","category":0},{"des":"疾病诊断","symbolSize":70,"name":"疾病诊断","category":0},{"des":"金融风控","symbolSize":70,"name":"金融风控","category":0},{"des":"社交网络分析","symbolSize":70,"name":"社交网络分析","category":0}]
+    option.series[0].links = [{"des":"需要用到","name":"需要用到","source":"知识图谱","target":"基础知识"},{"des":"包括","name":"包括","target":"数学知识","source":"基础知识"},{"des":"包括","name":"包括","target":"NLP","source":"基础知识"},{"des":"包括","name":"包括","target":"机器学习","source":"基础知识"},{"des":"包括","name":"包括","target":"图数据库","source":"基础知识"},{"des":"包括","name":"包括","target":"数据结构","source":"基础知识"},{"des":"应用于","name":"应用于","source":"知识图谱","target":"搜索引擎"},{"des":"应用于","name":"应用于","source":"知识图谱","target":"智能客服"},{"des":"应用于","name":"应用于","source":"知识图谱","target":"个性化推荐"},{"des":"应用于","name":"应用于","source":"知识图谱","target":"疾病诊断"},{"des":"应用于","name":"应用于","source":"知识图谱","target":"金融风控"},{"des":"应用于","name":"应用于","source":"知识图谱","target":"社交网络分析"}]
+    // 将更新后的option设置给图表
+    myChart.setOption(option);
+
+    document.getElementById("btn_export").disabled = true;
+
+    // var ip="139.224.215.154";
+    var ip = "10.0.8.21"
+    let socket = new WebSocket("ws://"+ip+":80/websocket");
+    let heartbeatInterval;
+
+    // 当 WebSocket 连接打开时执行
+    socket.onopen = function(event) {
+        console.log("WebSocket is open.");
+        startHeartbeat(); // 开始心跳
+        online_user();
+    };
+
+    // 查询在线人数
+    function online_user() {
+        var message = {"ip": ip, "msg": 'online_user'};
+        var msg_info = JSON.stringify(message);
+        socket.send(msg_info);
+    }
+
+    // 当收到消息时执行
+    socket.onmessage = function(event) {
+        console.log("Received message: " + event.data);
+        updateDescription(event.data); // 更新description的内容
+        document.getElementById("btn_generate").disabled = false;
+        document.getElementById("btn_generate").innerHTML = '生成';
+    };
+
+    // 发送心跳消息
+    function sendHeartbeat() {
+        console.log("Sending heartbeat...");
+        var message = {"ip": ip, "msg": 'heartbeat'};
+        var msg_info = JSON.stringify(message);
+        socket.send(msg_info);
+    }
+
+    // 开始心跳定时器
+    function startHeartbeat() {
+        // heartbeatInterval = setInterval(sendHeartbeat, 5000); // 每5秒发送一次心跳
+    }
+
+    // 当 WebSocket 连接关闭时执行
+    socket.onclose = function(event) {
+        console.log("WebSocket is closed.");
+        document.getElementById("btn_generate").disabled = false;
+        clearInterval(heartbeatInterval); // 清除心跳定时器
+    };
+
+    socket.onerror = function(event) {
+        console.error("WebSocket通信异常");
+        document.getElementById("btn_generate").disabled = false;
+        updateDescription([]);
+    };
+
+    // 更新description的内容
+    function updateDescription(data) {
+        const json = JSON.parse(data);
+        if('entity' in json && 'relation' in json) {
+            option.series[0].data = JSON.parse(json.entity)
+            option.series[0].links = JSON.parse(json.relation)
+            // 将更新后的option设置给图表
+            myChart.setOption(option);
+            console.log("生成知识图谱成功")
+
+            document.getElementById("btn_export").disabled = false;
+        }
+        if('online_user' in json) {
+            var online_user = json.online_user
+            document.getElementById("online_count").textContent = online_user
+        }
+        if('error' in json) {
+            alert(json.error)
+        }
+    }
+
+    // sleep
+    function sleep (delay) {
+        var start = (new Date()).getTime();
+        while ((new Date()).getTime() - start < delay) {
+            continue;
+        }
+    }
+
+    // 发送查询消息
+    function send() {
+        var textarea = document.getElementById("search-input");
+        var inputText = textarea.value;
+        var characterCount = inputText.length;
+        if(characterCount == 0) {
+            alert("请输入描述信息")
+            return;
+        }
+
+        document.getElementById("btn_generate").innerHTML = '图谱生成中';
+        document.getElementById("btn_generate").disabled = true;
+
+        sleep(1000);
+        var searchInput = document.getElementById('search-input').value;
+        var message = {"ip": ip, "msg": searchInput};
+        var msg_info = JSON.stringify(message);
+
+        try {
+            console.log(msg_info)
+            socket.send(msg_info);
+        } catch (error) {
+            console.error("WebSocket发送消息错误");
+            option.series[0].data = [{"name":"User","des":"User","symbolSize":50,"category":0},{"name":"Server","des":"Server","symbolSize":50,"category":0},{"name":"Exception","des":"Exception","symbolSize":50,"category":0},{"name":"Fiery","des":"Fiery","symbolSize":50,"category":0}]
+            option.series[0].links = [{"source":"User","target":"Server","name":"访问","des":"访问"},{"source":"Server","target":"Exception","name":"触发","des":"触发"},{"source":"Exception","target":"Fiery","name":"原因","des":"原因"}]
+            // 将更新后的option设置给图表
+            myChart.setOption(option);
+
+            document.getElementById("btn_generate").disabled = false;
+            document.getElementById("btn_generate").innerHTML = '生成';
+        }
+    }
+
+    function clearInput() {
+        document.getElementById('search-input').value = '';
+        const countSpan = document.getElementById("character-count");
+        countSpan.textContent = "0/" + maxCount;
+    }
+
+    function convert() {
+        alert("功能暂未实现, 敬请期待...");
+    }
+
+    function exportCypher() {
+        // 获取 echarts 中的 data 和 link 数据
+        var data = myChart.getOption().series[0].data;
+        var links = myChart.getOption().series[0].links;
+
+        // 判断 data 和 link 是否有值
+        if (!data && !links) {
+            console.log('Data and links is empty.');
+            return;
+        }
+
+        var createNodes = '';
+        var createRelationships = '';
+
+        if(data) {
+            data.forEach(function(node) {
+                createNodes += "CREATE (:实体 {name: '" + node.name + "'});\n";
+            });
+        }
+
+        if(links) {
+            links.forEach(function(link) {
+                createRelationships += "MATCH (s:实体 {name: '" + link.source + "'}), (t:实体 {name: '" + link.target + "'}) CREATE (s)-[:" + link.name + " {desc: '" + link.name + "'}]->(t);\n";
+            });
+        }
+
+        // 创建一个 Blob 对象，用于保存数据
+        var blob = new Blob([createNodes, createRelationships], { type: 'text/plain' });
+
+        // 创建一个下载链接
+        var downloadLink = document.createElement('a');
+        downloadLink.href = URL.createObjectURL(blob);
+        downloadLink.download = 'ai_knowledge_graph.txt';
+
+        // 模拟点击下载链接
+        downloadLink.click();
+    }
+
+    var maxCount = 200;
+    function countCharacters() {
+        var textarea = document.getElementById("search-input");
+        var countSpan = document.getElementById("character-count");
+        var inputText = textarea.value;
+        var characterCount = inputText.length;
+
+        if (characterCount > maxCount) {
+            textarea.value = inputText.substring(0, maxCount);
+            characterCount = maxCount;
+        }
+        countSpan.textContent = characterCount + "/" + maxCount;
+    }
+</script>
+</body>
+</html>

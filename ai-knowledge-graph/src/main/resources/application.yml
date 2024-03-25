@@ -1,0 +1,19 @@
+server:
+  port: ${SERVICE_PORT:80}
+ok:
+  http:
+    connect-timeout: 10000
+    keep-alive-duration: 300
+    max-idle-connections: 200
+    read-timeout: 60
+    write-timeout: 60
+spring:
+  thymeleaf:
+    cache: false
+    content-type: text/html
+    encoding: UTF-8
+    mode: HTML
+    prefix: classpath:/static/
+    suffix: .html
+  profiles:
+    active: ${SPRING_PROFILE:local}
