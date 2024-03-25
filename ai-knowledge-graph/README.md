@@ -27,3 +27,5 @@ http://localhost:80
 # 使用帮助
 ![img.png](img.png)
 
+## 加入群聊
+![img_1.png](img_1.png)
