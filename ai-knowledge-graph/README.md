@@ -31,6 +31,9 @@ Example:
 ```
 北京是中国的首都，拥有许多历史悠久的建筑，其中包括天安门、故宫、天坛、颐和园以及长城。
 ```
+** IMPORTANT **
+- 文本内容字数上限为 300
+- 每个用户每日最多可体验调用AI生成知识图谱为3次
 ## 2. 将知识图谱导出为 cypher sql
 ![img_3.png](img_3.png)
 ## 3. 输入 cypher sql，生成知识图谱
@@ -51,7 +54,7 @@ MATCH (s:City), (t:Building) WHERE s.name = '北京' and t.name = '天安门' CR
 MATCH (s:City), (t:Building) WHERE s.name = '北京' and t.name = '颐和园' CREATE (s)-[:CONTAINS]->(t);
 MATCH (s:City), (t:Building) WHERE s.name = '北京' and t.name = '天坛' CREATE (s)-[:CONTAINS]->(t);
 ```
-** important **
+** IMPORTANT **
 - 每行 cypher sql，使用封号(;)进行分隔
 - 目前只支持 Create Entity 和 Create Relation 两种操作
 - Entity 和 Relation 必须包含 name，以及使用 name 进行关联
