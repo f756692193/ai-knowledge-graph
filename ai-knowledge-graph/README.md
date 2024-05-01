@@ -58,3 +58,7 @@ MATCH (s:City), (t:Building) WHERE s.name = '北京' and t.name = '天坛' CREAT
 - 每行 cypher sql，使用封号(;)进行分隔
 - 目前只支持 Create Entity 和 Create Relation 两种操作
 - Entity 和 Relation 必须包含 name，以及使用 name 进行关联
+
+# 建议与反馈
+如果有任何问题或建议，欢迎加入群聊
+![img.png](img.png)
